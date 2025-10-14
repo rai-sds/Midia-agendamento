@@ -1,0 +1,350 @@
+/* Fonte mais moderna */
+body {
+  font-family: "Montserrat", Arial, sans-serif;
+  background: url("midia_fundo.jpg") no-repeat center center fixed;
+  background-size: cover;
+  margin: 0;
+  padding: 0;
+  color: #333;
+}
+
+/* Camada translúcida para leitura */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: linear-gradient(rgba(0,40,85,0.7), rgba(253,185,19,0.6));
+  z-index: -1;
+}
+
+/* Container central */
+.container {
+  max-width: 900px;
+  margin: 40px auto;
+  background: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* Títulos */
+h1, h2 {
+  text-align: center;
+  color: #002855; /* azul institucional */
+  margin-bottom: 20px;
+}
+
+/* Formulário */
+form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 25px;
+}
+
+form input, form button {
+  flex: 1 1 45%;
+  padding: 12px;
+  font-size: 15px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+/* Botão principal */
+button {
+  background: #002855; /* azul escuro */
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+button:hover {
+  background: #fdb913; /* amarelo destaque */
+  color: #002855;
+}
+
+/* Tabela */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+table th, table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+table th {
+  background: #002855;
+  color: white;
+  font-weight: 600;
+}
+
+table tr:nth-child(even) {
+  background: #f9f9f9;
+}
+
+/* Calendário */
+#calendar {
+  max-width: 900px;
+  margin: 40px auto;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  background: #fff;
+}
+
+/* Modal */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-box {
+  background: #fff;
+  padding: 25px;
+  border-radius: 10px;
+  max-width: 420px;
+  margin: auto;
+  text-align: left;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.modal-box h3 {
+  margin-top: 0;
+  color: #002855;
+}
+
+.modal-box button {
+  margin-top: 15px;
+  padding: 10px 14px;
+  background: #002855;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+.modal-box button:hover {
+  background: #fdb913;
+  color: #002855;
+}
+
+/* ========= Refinos formulário ========= */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 25px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group.full-width {
+  grid-column: span 2;
+}
+
+.form-group label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #002855;
+  font-size: 14px;
+}
+
+.form-group input {
+  padding: 12px 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 15px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-group input:focus {
+  border-color: #002855;
+  box-shadow: 0 0 0 3px rgba(0,40,85,0.2);
+  outline: none;
+}
+
+.form-grid .full-width button {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+}
+
+/* Responsivo geral */
+@media (max-width: 1024px) {
+  .container {
+    margin: 20px;
+    padding: 20px;
+  }
+  h1 { font-size: 1.8rem; }
+  h2 { font-size: 1.4rem; }
+}
+
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .form-group.full-width {
+    grid-column: span 1;
+  }
+  .form-grid button {
+    width: 100%;
+  }
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  table th, table td {
+    font-size: 14px;
+    padding: 8px;
+  }
+  #calendar {
+    width: 100%;
+    min-height: 600px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+  }
+
+  /* 🔹 Calendário mais visível no mobile */
+  #calendar {
+    background: #fdfdfd;
+    border: 2px solid #002855;
+  }
+  .fc .fc-toolbar-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #002855;
+  }
+  .fc .fc-button {
+    background-color: #002855;
+    color: #fff;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.85rem;
+  }
+  .fc .fc-button:hover {
+    background-color: #fdb913;
+    color: #002855;
+  }
+  .fc-event {
+    background-color: #fdb913 !important;
+    color: #fff !important;
+    border-radius: 6px;
+    padding: 3px 5px;
+    font-size: 0.8rem;
+  }
+  .fc-timegrid-slot-label {
+    color: #333;
+    font-weight: bold;
+    font-size: 0.75rem;
+  }
+  .blocos-laterais {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+@media (max-width: 480px) {
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.2rem; }
+  .container { padding: 15px; }
+}
+
+.dica-horario {
+  font-size: 12px;
+  color: #555;
+  margin-top: 4px;
+}
+@media (max-width: 768px) {
+  .fc-event {
+    background-color: #fffbfb !important; /* azul bem escuro */
+    color: #535353 !important;           /* texto branco */
+    border-radius: 6px;
+    padding: 3px 5px;
+    font-size: 0.8rem;
+  }
+
+  /* Cabeçalho da lista */
+  .fc-list-day {
+    background-color: #002855 !important; /* azul institucional */
+    color: #ffffff !important;
+    font-weight: bold;
+  }
+
+  /* Bordas do calendário */
+  #calendar {
+    background: #ffffff;
+    border: 2px solid #002855;
+  }
+}
+@media (max-width: 768px) {
+  /* Cabeçalho das datas (linhas dos dias) */
+  .fc-list-day {
+    background-color: #002855 !important; /* mesma cor do botão Agendar */
+    color: #ffffff !important;
+    font-weight: bold;
+    text-transform: capitalize;
+  }
+
+  /* Texto menor dentro das datas */
+  .fc-list-day-text {
+    color: #ffffff !important;
+  }
+
+  /* Separador da linha */
+  .fc-list-day-cushion {
+    background-color: #002855 !important;
+  }
+}
+
+.blocos-laterais {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 30px;
+}
+
+.bloco-esquerdo,
+.bloco-direito {
+  background: #fdfdfd;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.topo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.midia-logo {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 20px;     /* arredondamento */
+  border: 3px solid #002855; /* borda azul institucional */
+}
+

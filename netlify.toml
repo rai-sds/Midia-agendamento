@@ -1,0 +1,5 @@
+[build]
+  publish = "public"
+
+[dev]
+  command = "echo 'No build step required for this static site'"
