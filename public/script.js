@@ -91,15 +91,16 @@ async function carregarAgendamentos() {
     return;
   }
 
-  // 🔹 Data de hoje (zerando horas)
-  const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0);
+ // 🔹 Agora (data + hora atual)
+const agora = new Date();
 
-  // 🔹 Filtra apenas os agendamentos futuros ou de hoje para a LISTA
-  const agendamentosLista = agendamentos.filter(a => {
-    const dataAg = new Date(a.data + "T00:00");
-    return dataAg >= hoje;
-  });
+// 🔹 Filtra apenas os agendamentos que ainda não terminaram
+const agendamentosLista = agendamentos.filter(a => {
+  // monta objeto Date com data + hora de fim
+  const fimAg = new Date(`${a.data}T${a.fim || "00:00"}`);
+  return fimAg >= agora;
+});
+
 
   // --- Preenche a tabela apenas com os futuros ---
   const tbody = document.getElementById("lista-agendamentos");
