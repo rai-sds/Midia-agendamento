@@ -19,7 +19,8 @@ function isMobile() {
 function ensureFullCalendarCss() {
   const hasFc = Array.from(document.styleSheets).some(ss => {
     try {
-      return ss.href && ss.href.includes("fullcalendar") || Array.from(ss.cssRules || []).some(r => r.selectorText && r.selectorText.includes(".fc"));
+      return (ss.href && ss.href.includes("fullcalendar")) ||
+             Array.from(ss.cssRules || []).some(r => r.selectorText && r.selectorText.includes(".fc"));
     } catch (e) {
       return false;
     }
@@ -45,6 +46,39 @@ function toLocalISO(dateYMD, timeHHMM) {
   return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
 }
 
+// util: define min/max dos inputs de hora conforme dia
+function aplicarLimitesHora(diaSemana) {
+  const inicioEl = document.getElementById("inicio");
+  const fimEl = document.getElementById("fim");
+
+  let minInicio = "07:45";
+  let maxFim = "11:15";
+
+  if (diaSemana >= 1 && diaSemana <= 4) {
+    minInicio = "07:45";
+    maxFim = "16:45";
+  } else if (diaSemana === 5) {
+    minInicio = "07:45";
+    maxFim = "15:15";
+  } else if (diaSemana === 0 || diaSemana === 6) {
+    minInicio = "07:00";
+    maxFim = "22:00";
+  }
+
+  inicioEl.min = minInicio;
+  fimEl.max = maxFim;
+
+  if (inicioEl.value) {
+    fimEl.min = inicioEl.value;
+  } else {
+    fimEl.min = minInicio;
+  }
+
+  if (inicioEl.value && inicioEl.value < inicioEl.min) inicioEl.value = inicioEl.min;
+  if (fimEl.value && fimEl.value > fimEl.max) fimEl.value = fimEl.max;
+  if (fimEl.value && fimEl.value < fimEl.min) fimEl.value = fimEl.min;
+}
+
 async function carregarAgendamentos() {
   const { data: agendamentos, error } = await supabase
     .from("agendamentos")
@@ -65,6 +99,7 @@ async function carregarAgendamentos() {
       <td>${a.professora}</td>
       <td>${a.turma}</td>
       <td>${a.local ?? ""}</td>
+      <td>${a.evento ?? ""}</td>
       <td>${formatarData(a.data)}</td>
       <td>${a.inicio?.slice(0,5) ?? ""}</td>
       <td>${a.fim?.slice(0,5) ?? ""}</td>
@@ -133,6 +168,7 @@ function abrirModal(props) {
     <p><strong>Agendante:</strong> ${props.professora}</p>
     <p><strong>Turma:</strong> ${props.turma}</p>
     <p><strong>Local:</strong> ${props.local ?? ""}</p>
+    <p><strong>Tipo de Evento:</strong> ${props.evento ?? ""}</p>
     <p><strong>Data:</strong> ${formatarData(props.data)}</p>
     <p><strong>Início:</strong> ${props.inicio?.slice(0,5) ?? ""}</p>
     <p><strong>Fim:</strong> ${props.fim?.slice(0,5) ?? ""}</p>
@@ -146,17 +182,36 @@ function abrirModal(props) {
   };
 }
 
+// listeners de limites de hora
+document.getElementById("data").addEventListener("change", function () {
+  const data = new Date(this.value);
+  const diaSemana = data.getDay();
+  aplicarLimitesHora(diaSemana);
+});
+
+document.getElementById("inicio").addEventListener("change", function () {
+  const fimEl = document.getElementById("fim");
+  if (this.value) {
+    fimEl.min = this.value;
+    if (fimEl.value && fimEl.value < fimEl.min) {
+      fimEl.value = fimEl.min;
+    }
+  }
+});
+
+// SUBMIT
 document.getElementById("form-agendamento").addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const professora = document.getElementById("professora").value.trim();
   const turma = document.getElementById("turma").value.trim();
   const local = document.getElementById("local").value.trim();
+  const evento = document.getElementById("evento").value.trim();
   const data = document.getElementById("data").value;
   const inicio = document.getElementById("inicio").value;
-  const fim = document.getElementById("fim").value;
+    const fim = document.getElementById("fim").value;
 
-  if (!professora || !turma || !local || !data || !inicio || !fim) {
+  if (!professora || !turma || !local || !evento || !data || !inicio || !fim) {
     alert("Preencha todos os campos.");
     return;
   }
@@ -182,8 +237,8 @@ document.getElementById("form-agendamento").addEventListener("submit", async (e)
   const tardeInicio = 13 * 60 + 15;
   const tardeFimSegQui = 16 * 60 + 45;
   const tardeFimSex = 15 * 60 + 15;
-  const fimDeSemanaInicio = 7 * 60;
-  const fimDeSemanaFim = 22 * 60;
+  const fimDeSemanaInicio = 7 * 60;  // 07:00
+  const fimDeSemanaFim = 22 * 60;    // 22:00
 
   if (diaSemana >= 1 && diaSemana <= 5) {
     if (inicioTotal >= manhaInicio && fimTotal <= manhaFim) {
@@ -197,16 +252,18 @@ document.getElementById("form-agendamento").addEventListener("submit", async (e)
       }
     }
   } else if (diaSemana === 0 || diaSemana === 6) {
+    // Fim de semana: qualquer horário entre 07:00 e 22:00
     if (inicioTotal >= fimDeSemanaInicio && fimTotal <= fimDeSemanaFim) {
       turnoValido = true;
     }
   }
 
   if (!turnoValido) {
-       alert("Horário fora dos intervalos permitidos:\n\n• Manhã: 07:45 – 11:15\n• Tarde (Seg–Qui): 13:15 – 16:45\n• Tarde (Sex): 13:15 – 15:15\n• Fim de semana: 07:00 – 22:00");
+    alert("Horário fora dos intervalos permitidos:\n\n• Manhã: 07:45 – 11:15\n• Tarde (Seg–Qui): 13:15 – 16:45\n• Tarde (Sex): 13:15 – 15:15\n• Fim de semana: 07:00 – 22:00");
     return;
   }
 
+  // verifica conflitos
   const { data: existentes } = await supabase
     .from("agendamentos")
     .select("*")
@@ -225,10 +282,10 @@ document.getElementById("form-agendamento").addEventListener("submit", async (e)
     }
   }
 
-  // ✅ Inserção no Supabase incluindo o campo Local
+  // Inserção no Supabase (inclui evento)
   const { error } = await supabase
     .from("agendamentos")
-    .insert([{ professora, turma, local, data, inicio: inicio + ":00", fim: fim + ":00" }]);
+    .insert([{ professora, turma, local, evento, data, inicio: inicio + ":00", fim: fim + ":00" }]);
 
   if (error) {
     alert("Erro ao salvar: " + error.message);
@@ -238,24 +295,6 @@ document.getElementById("form-agendamento").addEventListener("submit", async (e)
   document.getElementById("form-agendamento").reset();
   await carregarAgendamentos();
 }); // <-- fechamento do addEventListener
-
-// 🔄 Atualiza dica de horário conforme a data escolhida
-document.getElementById("data").addEventListener("change", function () {
-  const data = new Date(this.value);
-  const diaSemana = data.getDay();
-  const dicas = document.querySelectorAll(".dica-horario");
-
-  let texto = "Horários permitidos:\n• Manhã: 07:45 – 11:15";
-  if (diaSemana >= 1 && diaSemana <= 4) {
-    texto += "\n• Tarde: 13:15 – 16:45";
-  } else if (diaSemana === 5) {
-    texto += "\n• Tarde: 13:15 – 15:15";
-  } else if (diaSemana === 6 || diaSemana === 0) {
-    texto = "Horários permitidos:\n• Fim de semana: 07:00 – 22:00";
-  }
-
-  dicas.forEach(el => el.textContent = texto);
-});
 
 // 🚀 Inicializa o calendário e carrega agendamentos
 carregarAgendamentos();
