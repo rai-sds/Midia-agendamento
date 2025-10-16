@@ -348,3 +348,8 @@ table tr:nth-child(even) {
   border: 3px solid #002855; /* borda azul institucional */
 }
 
+.center-label {
+  text-align: center;
+  display: block;
+  width: 100%;
+}

@@ -91,9 +91,20 @@ async function carregarAgendamentos() {
     return;
   }
 
+  // 🔹 Data de hoje (zerando horas)
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+
+  // 🔹 Filtra apenas os agendamentos futuros ou de hoje para a LISTA
+  const agendamentosLista = agendamentos.filter(a => {
+    const dataAg = new Date(a.data + "T00:00");
+    return dataAg >= hoje;
+  });
+
+  // --- Preenche a tabela apenas com os futuros ---
   const tbody = document.getElementById("lista-agendamentos");
   tbody.innerHTML = "";
-  agendamentos.forEach(a => {
+  agendamentosLista.forEach(a => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${a.professora}</td>
@@ -107,6 +118,7 @@ async function carregarAgendamentos() {
     tbody.appendChild(tr);
   });
 
+  // --- O calendário continua recebendo TODOS os eventos ---
   const eventos = agendamentos.map(a => {
     const inicio = a.inicio?.slice(0,5) ?? "07:00";
     const fim = a.fim?.slice(0,5) ?? "08:00";
@@ -133,11 +145,7 @@ async function carregarAgendamentos() {
       views: { listMonth: { buttonText: "Lista" } },
       buttonText: { today: "Hoje" },
       height: "auto",
-      events: eventos.length ? eventos : [{
-        title: "Sem agendamentos",
-        start: new Date().toISOString().slice(0,10) + "T09:00",
-        end: new Date().toISOString().slice(0,10) + "T09:30"
-      }],
+      events: eventos,
       displayEventTime: true,
       eventDisplay: "block",
       dayMaxEventRows: 3,
@@ -147,12 +155,6 @@ async function carregarAgendamentos() {
       }
     });
     calendar.render();
-    window.addEventListener("resize", () => {
-      const newView = isMobile() ? "listMonth" : "dayGridMonth";
-      if (calendar && calendar.view.type !== newView) calendar.changeView(newView);
-      calendar.updateSize();
-    });
-    setTimeout(() => calendar.updateSize(), 80);
   } else {
     calendar.removeAllEvents();
     calendar.addEventSource(eventos);
@@ -209,7 +211,7 @@ document.getElementById("form-agendamento").addEventListener("submit", async (e)
   const evento = document.getElementById("evento").value.trim();
   const data = document.getElementById("data").value;
   const inicio = document.getElementById("inicio").value;
-    const fim = document.getElementById("fim").value;
+  const fim = document.getElementById("fim").value;
 
   if (!professora || !turma || !local || !evento || !data || !inicio || !fim) {
     alert("Preencha todos os campos.");
