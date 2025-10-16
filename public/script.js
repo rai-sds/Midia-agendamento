@@ -182,8 +182,10 @@ document.getElementById("form-agendamento").addEventListener("submit", async (e)
   const tardeInicio = 13 * 60 + 15;
   const tardeFimSegQui = 16 * 60 + 45;
   const tardeFimSex = 15 * 60 + 15;
+  const fimDeSemanaInicio = 7 * 60;
+  const fimDeSemanaFim = 22 * 60;
 
-    if (diaSemana >= 1 && diaSemana <= 5) {
+  if (diaSemana >= 1 && diaSemana <= 5) {
     if (inicioTotal >= manhaInicio && fimTotal <= manhaFim) {
       turnoValido = true;
     }
@@ -194,13 +196,14 @@ document.getElementById("form-agendamento").addEventListener("submit", async (e)
         turnoValido = true;
       }
     }
-  } else {
-    alert("Não é permitido agendar aos finais de semana.");
-    return;
+  } else if (diaSemana === 0 || diaSemana === 6) {
+    if (inicioTotal >= fimDeSemanaInicio && fimTotal <= fimDeSemanaFim) {
+      turnoValido = true;
+    }
   }
 
   if (!turnoValido) {
-    alert("Horário fora dos intervalos permitidos:\n\n• Manhã: 07:45 – 11:15\n• Tarde (Seg–Qui): 13:15 – 16:45\n• Tarde (Sex): 13:15 – 15:15");
+       alert("Horário fora dos intervalos permitidos:\n\n• Manhã: 07:45 – 11:15\n• Tarde (Seg–Qui): 13:15 – 16:45\n• Tarde (Sex): 13:15 – 15:15\n• Fim de semana: 07:00 – 22:00");
     return;
   }
 
@@ -247,8 +250,8 @@ document.getElementById("data").addEventListener("change", function () {
     texto += "\n• Tarde: 13:15 – 16:45";
   } else if (diaSemana === 5) {
     texto += "\n• Tarde: 13:15 – 15:15";
-  } else {
-    texto = "Agendamento não permitido aos finais de semana.";
+  } else if (diaSemana === 6 || diaSemana === 0) {
+    texto = "Horários permitidos:\n• Fim de semana: 07:00 – 22:00";
   }
 
   dicas.forEach(el => el.textContent = texto);

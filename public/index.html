@@ -41,6 +41,10 @@
           <label for="local">Local</label>
           <input type="text" id="local" required />
         </div>
+         <div class="form-group">
+          <label for="evento">Tipo de Evento</label>
+          <input type="text" id="evento" required />
+        </div>
         <div class="form-group">
           <label for="data">Data</label>
           <input type="date" id="data" required />
@@ -48,12 +52,12 @@
         <div class="form-group">
           <label for="inicio">Início</label>
           <input type="time" id="inicio" required min="07:00" max="18:00" />
-          <small class="dica-horario">Horário permitido: 07:00 às 18:00</small>
+          
         </div>
         <div class="form-group">
           <label for="fim">Fim</label>
           <input type="time" id="fim" required min="07:00" max="18:00" />
-          <small class="dica-horario">Horário permitido: 07:00 às 18:00</small>
+          
         </div>
         <div class="form-group full-width">
           <button type="submit">Agendar</button>
@@ -74,6 +78,7 @@
                 <th>Agendante</th>
                 <th>Turma</th>
                 <th>Local</th>
+                <th>Tipo de Evento</th>
                 <th>Data</th>
                 <th>Início</th>
                 <th>Fim</th>
