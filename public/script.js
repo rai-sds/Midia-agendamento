@@ -2,6 +2,7 @@
 const supabase = window.supabase;
 
 let calendar;
+let isAdmin = false; // controle de login admin
 
 // utility: formata ISO date (YYYY-MM-DD) para dd/mm/yyyy
 function formatarData(iso) {
@@ -91,18 +92,13 @@ async function carregarAgendamentos() {
     return;
   }
 
- // 🔹 Agora (data + hora atual)
-const agora = new Date();
+  const agora = new Date();
+  const agendamentosLista = agendamentos.filter(a => {
+    const fimAg = new Date(`${a.data}T${a.fim || "00:00"}`);
+    return fimAg >= agora;
+  });
 
-// 🔹 Filtra apenas os agendamentos que ainda não terminaram
-const agendamentosLista = agendamentos.filter(a => {
-  // monta objeto Date com data + hora de fim
-  const fimAg = new Date(`${a.data}T${a.fim || "00:00"}`);
-  return fimAg >= agora;
-});
-
-
-  // --- Preenche a tabela apenas com os futuros ---
+  // --- Preenche a tabela pública ---
   const tbody = document.getElementById("lista-agendamentos");
   tbody.innerHTML = "";
   agendamentosLista.forEach(a => {
@@ -119,7 +115,60 @@ const agendamentosLista = agendamentos.filter(a => {
     tbody.appendChild(tr);
   });
 
-  // --- O calendário continua recebendo TODOS os eventos ---
+  // --- Preenche a tabela do admin ---
+  const adminTbody = document.getElementById("admin-agendamentos");
+  if (adminTbody) {
+    adminTbody.innerHTML = "";
+    agendamentos.forEach(a => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${a.professora}</td>
+        <td>${a.turma}</td>
+        <td>${a.local ?? ""}</td>
+        <td>${a.evento ?? ""}</td>
+        <td>${formatarData(a.data)}</td>
+        <td>${a.inicio?.slice(0,5) ?? ""}</td>
+        <td>${a.fim?.slice(0,5) ?? ""}</td>
+        <td>
+          <button class="editar-btn" data-id="${a.id}">Editar</button>
+          <button class="remover-btn" data-id="${a.id}">Remover</button>
+        </td>
+      `;
+      adminTbody.appendChild(tr);
+    });
+
+    // listeners de ação
+    adminTbody.querySelectorAll(".remover-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        if (confirm("Deseja realmente remover este agendamento?")) {
+          const id = btn.getAttribute("data-id");
+          await supabase.from("agendamentos").delete().eq("id", id);
+          carregarAgendamentos();
+        }
+      });
+    });
+
+    adminTbody.querySelectorAll(".editar-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const id = btn.getAttribute("data-id");
+        const { data } = await supabase.from("agendamentos").select("*").eq("id", id).single();
+        if (data) {
+          document.getElementById("professora").value = data.professora;
+          document.getElementById("turma").value = data.turma;
+          document.getElementById("local").value = data.local;
+          document.getElementById("evento").value = data.evento;
+          document.getElementById("data").value = data.data;
+          document.getElementById("inicio").value = data.inicio.slice(0,5);
+          document.getElementById("fim").value = data.fim.slice(0,5);
+          // ao salvar, remove o antigo
+          await supabase.from("agendamentos").delete().eq("id", id);
+          alert("Edite os campos e clique em Agendar para salvar as alterações.");
+        }
+      });
+    });
+  }
+
+  // --- O calendário ---
   const eventos = agendamentos.map(a => {
     const inicio = a.inicio?.slice(0,5) ?? "07:00";
     const fim = a.fim?.slice(0,5) ?? "08:00";
@@ -202,7 +251,7 @@ document.getElementById("inicio").addEventListener("change", function () {
   }
 });
 
-// SUBMIT
+// SUBMIT do formulário de agendamento
 document.getElementById("form-agendamento").addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -255,14 +304,14 @@ document.getElementById("form-agendamento").addEventListener("submit", async (e)
       }
     }
   } else if (diaSemana === 0 || diaSemana === 6) {
-    // Fim de semana: qualquer horário entre 07:00 e 22:00
     if (inicioTotal >= fimDeSemanaInicio && fimTotal <= fimDeSemanaFim) {
       turnoValido = true;
     }
   }
 
-  if (!turnoValido) {
-    alert("Horário fora dos intervalos permitidos:\n\n• Manhã: 07:45 – 11:15\n• Tarde (Seg–Qui): 13:15 – 16:45\n• Tarde (Sex): 13:15 – 15:15\n• Fim de semana: 07:00 – 22:00");
+  // 🚨 Se não for válido, só permite se for admin
+  if (!turnoValido && !isAdmin) {
+    alert("Horário fora dos intervalos permitidos:\n\n• Manhã: 07:45 – 11:15\n• Tarde (Seg–Qui): 13:15 – 16:45\n• Tarde (Sex): 13:15 – 15:15\n• Fim de semana: 07:00 – 22:00\n\nSomente administradores podem criar agendamentos fora do padrão.");
     return;
   }
 
@@ -285,7 +334,7 @@ document.getElementById("form-agendamento").addEventListener("submit", async (e)
     }
   }
 
-  // Inserção no Supabase (inclui evento)
+  // Inserção no Supabase
   const { error } = await supabase
     .from("agendamentos")
     .insert([{ professora, turma, local, evento, data, inicio: inicio + ":00", fim: fim + ":00" }]);
@@ -297,7 +346,21 @@ document.getElementById("form-agendamento").addEventListener("submit", async (e)
 
   document.getElementById("form-agendamento").reset();
   await carregarAgendamentos();
-}); // <-- fechamento do addEventListener
+});
 
 // 🚀 Inicializa o calendário e carrega agendamentos
 carregarAgendamentos();
+
+// 🔑 Login do Administrador
+document.getElementById("form-admin-login").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const senha = document.getElementById("admin-senha").value;
+  if (senha === "1234") { // senha fixa de exemplo
+    isAdmin = true;
+    document.getElementById("admin-login").style.display = "none";
+    document.getElementById("painel-admin").style.display = "block";
+    carregarAgendamentos();
+  } else {
+    alert("Senha incorreta.");
+  }
+});

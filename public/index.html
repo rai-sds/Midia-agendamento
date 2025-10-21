@@ -28,55 +28,56 @@
 
     <br><br><br><br>
     <div class="stack">
+      <!-- Formulário de Agendamento -->
       <form id="form-agendamento" class="form-grid" autocomplete="off">
-  <div class="form-group">
-    <label for="professora">Agendante</label>
-    <input type="text" id="professora" required />
-  </div>
+        <div class="form-group">
+          <label for="professora">Agendante</label>
+          <input type="text" id="professora" required />
+        </div>
 
-  <div class="form-group">
-    <label for="turma">Turma</label>
-    <input type="text" id="turma" required />
-  </div>
+        <div class="form-group">
+          <label for="turma">Turma</label>
+          <input type="text" id="turma" required />
+        </div>
 
-  <div class="form-group">
-    <label for="local">Local</label>
-    <input type="text" id="local" required />
-  </div>
+        <div class="form-group">
+          <label for="local">Local</label>
+          <input type="text" id="local" required />
+        </div>
 
-  <div class="form-group">
-    <label for="data">Data</label>
-    <input type="date" id="data" required />
-  </div>
+        <div class="form-group">
+          <label for="data">Data</label>
+          <input type="date" id="data" required />
+        </div>
 
-  <div class="form-group">
-    <label for="inicio">Início</label>
-    <input type="time" id="inicio" required />
-  </div>
+        <div class="form-group">
+          <label for="inicio">Início</label>
+          <input type="time" id="inicio" required />
+        </div>
 
-  <div class="form-group">
-    <label for="fim">Fim</label>
-    <input type="time" id="fim" required />
-  </div>
+        <div class="form-group">
+          <label for="fim">Fim</label>
+          <input type="time" id="fim" required />
+        </div>
 
-  <!-- Tipo de Evento ocupa duas colunas -->
- <div class="form-group full-width">
-  <label for="evento" class="center-label">Tipo de Evento</label>
-  <input type="text" id="evento" required />
-</div>
+        <!-- Tipo de Evento ocupa duas colunas -->
+        <div class="form-group full-width">
+          <label for="evento" class="center-label">Tipo de Evento</label>
+          <input type="text" id="evento" required />
+        </div>
 
+        <div class="form-group full-width">
+          <button type="submit">Agendar</button>
+        </div>
+      </form>
 
-  <div class="form-group full-width">
-    <button type="submit">Agendar</button>
-  </div>
-</form>
-
-
+      <!-- Calendário -->
       <section aria-labelledby="titulo-calendario">
         <h2 id="titulo-calendario">Calendário de Agendamentos</h2>
         <div id="calendar"></div>
       </section>
 
+      <!-- Lista de Agendamentos -->
       <section aria-labelledby="titulo-lista">
         <h2 id="titulo-lista">Lista de Agendamentos</h2>
         <div class="table-wrap">
@@ -93,6 +94,37 @@
               </tr>
             </thead>
             <tbody id="lista-agendamentos"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Área de Login do Administrador -->
+      <section id="admin-login" class="admin-section">
+        <h2>Login do Administrador</h2>
+        <form id="form-admin-login">
+          <input type="password" id="admin-senha" placeholder="Senha de administrador" required />
+          <button type="submit">Entrar</button>
+        </form>
+      </section>
+
+      <!-- Painel do Administrador -->
+      <section id="painel-admin" class="admin-section" style="display:none;">
+        <h2>Gerenciar Agendamentos</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Agendante</th>
+                <th>Turma</th>
+                <th>Local</th>
+                <th>Evento</th>
+                <th>Data</th>
+                <th>Início</th>
+                <th>Fim</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="admin-agendamentos"></tbody>
           </table>
         </div>
       </section>
