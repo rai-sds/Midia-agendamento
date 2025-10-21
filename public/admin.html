@@ -8,11 +8,12 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <header class="topo">
+  <header class="topo admin-top">
     <h1>Painel de Administração</h1>
+    <button id="btn-adicionar" class="btn-primary btn-adicionar" aria-label="Novo agendamento">Adicionar</button>
   </header>
 
-  <main class="container">
+  <main class="container admin-container">
     <section>
       <h2>Lista de Agendamentos</h2>
       <div class="table-wrap">
@@ -34,8 +35,9 @@
       </div>
     </section>
 
-    <section>
-      <h2>Novo Agendamento (Admin)</h2>
+    <!-- formulário oculto por padrão, aparece ao clicar Adicionar ou ao editar -->
+    <section id="admin-form-section" style="margin-top:20px; display:none;">
+      <h2 id="admin-form-title">Novo Agendamento</h2>
       <form id="form-admin-agendamento" autocomplete="off">
         <input type="text" id="professora" placeholder="Agendante" required />
         <input type="text" id="turma" placeholder="Turma" required />
@@ -44,7 +46,10 @@
         <input type="date" id="data" required />
         <input type="time" id="inicio" required />
         <input type="time" id="fim" required />
-        <button type="submit">Salvar</button>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button type="submit" class="btn-primary">Salvar</button>
+          <button type="button" id="btn-cancelar" class="btn-secondary">Cancelar</button>
+        </div>
       </form>
     </section>
   </main>

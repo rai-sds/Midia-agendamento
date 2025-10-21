@@ -60,7 +60,6 @@
           <input type="time" id="fim" required />
         </div>
 
-        <!-- Tipo de Evento ocupa duas colunas -->
         <div class="form-group full-width">
           <label for="evento" class="center-label">Tipo de Evento</label>
           <input type="text" id="evento" required />
@@ -97,17 +96,46 @@
           </table>
         </div>
       </section>
-
-      <!-- Login do Administrador -->
-      <section id="admin-login" class="admin-section">
-        <h2>Login do Administrador</h2>
-        <form id="form-admin-login">
-          <input type="password" id="admin-senha" placeholder="Senha de administrador" required />
-          <button type="submit">Entrar</button>
-        </form>
-      </section>
     </div>
   </div>
+
+  <!-- SIDEBAR: botão disparador e painel lateral -->
+  <button id="btn-sidebar" class="btn-icone" aria-label="Abrir painel">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M4 7H6L7 5H17L18 7H20C21.1 7 22 7.9 22 9V19C22 20.1 21.1 21 20 21H4C2.9 21 2 20.1 2 19V9C2 7.9 2.9 7 4 7Z" stroke="#fff" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="12" cy="14" r="3.5" stroke="#fff" stroke-width="1"/>
+    </svg>
+  </button>
+
+  <aside id="sidebar" class="sidebar" aria-hidden="true">
+    <div class="sidebar-header">
+      <button id="close-sidebar" class="close-sidebar" aria-label="Fechar painel">&times;</button>
+      <h3>Painel</h3>
+    </div>
+
+    <div class="sidebar-section">
+      <h4>Login do Administrador</h4>
+      <form id="form-admin-login-sidebar" class="admin-sidebar-form">
+        <label for="admin-senha-sidebar" class="sr-only">Senha de administrador</label>
+        <input type="password" id="admin-senha-sidebar" placeholder="Senha de administrador" required />
+        <button type="submit" class="btn-primary">Entrar</button>
+      </form>
+    </div>
+
+    <div class="sidebar-section">
+      <h4>Entrar em contato</h4>
+      <p>Fale com a responsável pela mídia</p>
+      <a id="btn-whatsapp" class="btn-whatsapp" href="https://wa.me/556183030004" target="_blank" rel="noopener noreferrer" aria-label="Abrir WhatsApp">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M21 12.08C21 17.09 16.97 21 12 21C8.95 21 6.1 19.42 4.5 17L3 21L6.12 19.59C7.14 20.17 8.35 20.5 9.66 20.5C14.68 20.5 19 16.18 19 11.16C19 10.07 18.85 9.02 18.56 8.03L21 6.5V12.08Z" stroke="#fff" stroke-width="0" fill="#25D366"/>
+          <path d="M16.5 13.46C16.12 13.95 15.48 14.17 14.9 13.99C14.15 13.76 13.16 13.35 12.42 12.61C11.68 11.87 11.27 10.88 11.04 10.13C10.86 9.55 11.08 8.91 11.57 8.53L11.6 8.51C11.85 8.34 12.13 8.27 12.37 8.33C12.6 8.38 12.92 8.53 13.34 8.84C13.76 9.14 14.2 9.55 14.49 9.84C14.78 10.13 15.07 10.48 15.33 10.97C15.59 11.45 15.49 11.95 15.13 12.41L15.1 12.44C14.77 12.8 14.58 12.88 15.07 13.26Z" fill="#fff"/>
+        </svg>
+        <span>WhatsApp</span>
+      </a>
+    </div>
+  </aside>
+
+  <div id="sidebar-overlay" class="sidebar-overlay" aria-hidden="true"></div>
 
   <!-- Supabase Client e Script principal -->
   <script src="supabaseClient.js"></script>
@@ -118,15 +146,39 @@
     <div class="modal-box" id="modal-content"></div>
   </div>
 
-  <!-- Script de login admin -->
+  <!-- Script sidebar / login -->
   <script>
-    document.getElementById("form-admin-login").addEventListener("submit", function(e) {
+    // SIDEBAR: abrir / fechar
+    const btnSidebar = document.getElementById("btn-sidebar");
+    const sidebar = document.getElementById("sidebar");
+    const sidebarOverlay = document.getElementById("sidebar-overlay");
+    const closeSidebarBtn = document.getElementById("close-sidebar");
+
+    function abrirSidebar() {
+      sidebar.classList.add("open");
+      sidebarOverlay.classList.add("open");
+      sidebar.setAttribute("aria-hidden", "false");
+      sidebarOverlay.setAttribute("aria-hidden", "false");
+    }
+    function fecharSidebar() {
+      sidebar.classList.remove("open");
+      sidebarOverlay.classList.remove("open");
+      sidebar.setAttribute("aria-hidden", "true");
+      sidebarOverlay.setAttribute("aria-hidden", "true");
+    }
+
+    btnSidebar?.addEventListener("click", abrirSidebar);
+    closeSidebarBtn?.addEventListener("click", fecharSidebar);
+    sidebarOverlay?.addEventListener("click", fecharSidebar);
+
+    // Login via sidebar: redireciona para admin.html quando correto
+    document.getElementById("form-admin-login-sidebar").addEventListener("submit", function(e) {
       e.preventDefault();
-      const senha = document.getElementById("admin-senha").value;
+      const senha = document.getElementById("admin-senha-sidebar").value;
       if (senha === "Midia123") {
         window.location.href = "admin.html";
       } else {
-        alert("Senha incorreta!");
+        alert("Senha incorreta.");
       }
     });
   </script>
@@ -135,11 +187,13 @@
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       const calendarEl = document.getElementById("calendar");
-      const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: "timeGridWeek",
-        locale: "pt-br"
-      });
-      calendar.render();
+      if (calendarEl) {
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: "timeGridWeek",
+          locale: "pt-br"
+        });
+        calendar.render();
+      }
     });
   </script>
 </body>

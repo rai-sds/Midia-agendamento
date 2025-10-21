@@ -1,7 +1,7 @@
 // Usa o cliente global do Supabase
 const supabase = window.supabase;
 
-// Função para verificar se horário está fora do padrão
+// checa se horário fora do padrão
 function isHorarioForaDoPadrao(data, inicio, fim) {
   const dt = new Date(data + "T00:00");
   const diaSemana = dt.getDay();
@@ -30,10 +30,9 @@ function isHorarioForaDoPadrao(data, inicio, fim) {
     if (inicioTotal >= fimDeSemanaInicio && fimTotal <= fimDeSemanaFim) valido = true;
   }
 
-  return !valido; // retorna true se estiver fora do padrão
+  return !valido;
 }
 
-// Carregar agendamentos
 async function carregarAgendamentos() {
   const { data: agendamentos, error } = await supabase
     .from("agendamentos")
@@ -51,12 +50,9 @@ async function carregarAgendamentos() {
 
   agendamentos.forEach(a => {
     const tr = document.createElement("tr");
-
-    // aplica classe fora-padrao se necessário
     if (isHorarioForaDoPadrao(a.data, a.inicio.slice(0,5), a.fim.slice(0,5))) {
       tr.classList.add("fora-padrao");
     }
-
     tr.innerHTML = `
       <td>${a.professora}</td>
       <td>${a.turma}</td>
@@ -94,7 +90,9 @@ async function carregarAgendamentos() {
         alert("Erro ao buscar: " + error.message);
         return;
       }
-      // Preenche o formulário
+      const formSection = document.getElementById("admin-form-section");
+      formSection.style.display = "block";
+      document.getElementById("admin-form-title").textContent = "Editar Agendamento";
       document.getElementById("professora").value = data.professora;
       document.getElementById("turma").value = data.turma;
       document.getElementById("local").value = data.local;
@@ -102,9 +100,8 @@ async function carregarAgendamentos() {
       document.getElementById("data").value = data.data;
       document.getElementById("inicio").value = data.inicio.slice(0,5);
       document.getElementById("fim").value = data.fim.slice(0,5);
-
-      // Marca que é edição
       document.getElementById("form-admin-agendamento").setAttribute("data-edit-id", id);
+      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
     });
   });
 }
@@ -112,7 +109,6 @@ async function carregarAgendamentos() {
 // Salvar (novo ou edição)
 document.getElementById("form-admin-agendamento").addEventListener("submit", async (e) => {
   e.preventDefault();
-
   const professora = document.getElementById("professora").value.trim();
   const turma = document.getElementById("turma").value.trim();
   const local = document.getElementById("local").value.trim();
@@ -123,8 +119,12 @@ document.getElementById("form-admin-agendamento").addEventListener("submit", asy
 
   const idEdicao = e.target.getAttribute("data-edit-id");
 
+  if (!professora || !turma || !local || !evento || !data || !inicio || !fim) {
+    alert("Preencha todos os campos.");
+    return;
+  }
+
   if (idEdicao) {
-    // Update
     const { error } = await supabase
       .from("agendamentos")
       .update({ professora, turma, local, evento, data, inicio: inicio + ":00", fim: fim + ":00" })
@@ -135,10 +135,10 @@ document.getElementById("form-admin-agendamento").addEventListener("submit", asy
       alert("Agendamento atualizado!");
       e.target.removeAttribute("data-edit-id");
       e.target.reset();
+      document.getElementById("admin-form-section").style.display = "none";
       carregarAgendamentos();
     }
   } else {
-    // Insert
     const { error } = await supabase
       .from("agendamentos")
       .insert([{ professora, turma, local, evento, data, inicio: inicio + ":00", fim: fim + ":00" }]);
@@ -147,9 +147,27 @@ document.getElementById("form-admin-agendamento").addEventListener("submit", asy
     else {
       alert("Agendamento criado!");
       e.target.reset();
+      document.getElementById("admin-form-section").style.display = "none";
       carregarAgendamentos();
     }
   }
+});
+
+// Botão Adicionar e Cancelar
+document.getElementById("btn-adicionar").addEventListener("click", () => {
+  const formSection = document.getElementById("admin-form-section");
+  formSection.style.display = "block";
+  document.getElementById("admin-form-title").textContent = "Novo Agendamento";
+  document.getElementById("form-admin-agendamento").reset();
+  document.getElementById("form-admin-agendamento").removeAttribute("data-edit-id");
+  window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+});
+
+document.getElementById("btn-cancelar").addEventListener("click", () => {
+  const formSection = document.getElementById("admin-form-section");
+  formSection.style.display = "none";
+  document.getElementById("form-admin-agendamento").removeAttribute("data-edit-id");
+  document.getElementById("form-admin-agendamento").reset();
 });
 
 // Inicializa

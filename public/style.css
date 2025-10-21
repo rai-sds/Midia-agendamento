@@ -29,10 +29,24 @@ body::before {
 }
 
 /* Títulos */
-h1, h2 {
+h1 {
   text-align: center;
-  color: #002855; /* azul institucional */
+  color: #002855;
+  margin-bottom: 25px;
+  font-size: 2.2rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.15);
+}
+h2 {
+  text-align: center;
+  color: #002855;
   margin-bottom: 20px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  border-bottom: 3px solid #fdb913;
+  padding-bottom: 5px;
 }
 
 /* Formulário */
@@ -53,7 +67,7 @@ form input, form button {
 
 /* Botão principal */
 button {
-  background: #002855; /* azul escuro */
+  background: #002855;
   color: white;
   border: none;
   border-radius: 6px;
@@ -63,7 +77,7 @@ button {
 }
 
 button:hover {
-  background: #fdb913; /* amarelo destaque */
+  background: #fdb913;
   color: #002855;
 }
 
@@ -226,7 +240,7 @@ table tr:nth-child(even) {
     padding: 10px;
   }
 
-  /* 🔹 Calendário mais visível no mobile */
+  /* Calendário mais visível no mobile */
   #calendar {
     background: #fdfdfd;
     border: 2px solid #002855;
@@ -337,8 +351,8 @@ table tr:nth-child(even) {
   max-width: 100%;
   height: auto;
   display: block;
-  border-radius: 20px;     /* arredondamento */
-  border: 3px solid #002855; /* borda azul institucional */
+  border-radius: 20px;
+  border: 3px solid #002855;
 }
 
 .center-label {
@@ -359,6 +373,17 @@ header.topo {
 header.topo h1 {
   margin: 0;
   font-size: 1.8rem;
+}
+
+/* admin header com botão adicionar */
+.admin-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px;
+  background: linear-gradient(90deg,#f7f9fb,#ffffff);
+  border-bottom: 1px solid rgba(0,0,0,0.04);
 }
 
 /* Botões de ação no admin */
@@ -404,9 +429,163 @@ form[data-edit-id] button {
 
 /* Linhas fora do padrão (admin) */
 tr.fora-padrao {
-  background-color: #fff3cd !important; /* amarelo suave */
+  background-color: #fff3cd !important;
 }
 tr.fora-padrao td {
   font-weight: bold;
   color: #856404;
+}
+
+/* ================= Sidebar admin / contato ================= */
+
+.btn-icone {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg,#002855,#0b4a78);
+  border: none;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1100;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+}
+
+.btn-icone svg { display: block; }
+
+/* overlay */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms ease;
+  z-index: 1050;
+}
+
+/* painel lateral */
+.sidebar {
+  position: fixed;
+  right: -360px;
+  top: 0;
+  height: 100vh;
+  width: 320px;
+  background: linear-gradient(180deg,#fff,#f7f9fb);
+  box-shadow: -8px 0 24px rgba(0,0,0,0.12);
+  padding: 18px;
+  z-index: 1105;
+  transition: right 260ms cubic-bezier(.2,.9,.2,1);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* aberto */
+.sidebar.open {
+  right: 0;
+}
+.sidebar.open + .sidebar-overlay, .sidebar-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* header da sidebar */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sidebar-header h3 {
+  margin: 0;
+  color: #002855;
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+.close-sidebar {
+  background: transparent;
+  border: none;
+  font-size: 26px;
+  line-height: 1;
+  color: #002855;
+  cursor: pointer;
+}
+
+/* seções internas */
+.sidebar-section {
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(0,40,85,0.04);
+}
+.sidebar-section h4 {
+  margin: 0 0 8px 0;
+  color: #002855;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+/* form login na sidebar */
+.admin-sidebar-form {
+  display: flex;
+  gap: 8px;
+  flex-direction: column;
+}
+.admin-sidebar-form input[type="password"] {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #cfdbe8;
+  font-size: 14px;
+}
+.btn-primary {
+  padding: 10px 12px;
+  background: #002855;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+/* secondary button */
+.btn-secondary {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #e9eef6;
+  color: #002855;
+  border: 1px solid #cfdbe8;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+/* Whatsapp button */
+.btn-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #25D366;
+  color: #002855;
+  padding: 10px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 700;
+}
+.btn-whatsapp svg { margin-left: 2px; }
+
+/* acessibilidade: esconder rótulos visuais */
+.sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); border: 0;
+}
+
+/* mobile: largura menor */
+@media (max-width: 480px) {
+  .sidebar { width: 280px; }
+  .btn-icone { right: 12px; bottom: 12px; }
 }
