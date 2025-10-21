@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Painel do Administrador</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header class="topo">
+    <h1>Painel de Administração</h1>
+  </header>
+
+  <main class="container">
+    <section>
+      <h2>Lista de Agendamentos</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Agendante</th>
+              <th>Turma</th>
+              <th>Local</th>
+              <th>Evento</th>
+              <th>Data</th>
+              <th>Início</th>
+              <th>Fim</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="admin-agendamentos"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Novo Agendamento (Admin)</h2>
+      <form id="form-admin-agendamento" autocomplete="off">
+        <input type="text" id="professora" placeholder="Agendante" required />
+        <input type="text" id="turma" placeholder="Turma" required />
+        <input type="text" id="local" placeholder="Local" required />
+        <input type="text" id="evento" placeholder="Evento" required />
+        <input type="date" id="data" required />
+        <input type="time" id="inicio" required />
+        <input type="time" id="fim" required />
+        <button type="submit">Salvar</button>
+      </form>
+    </section>
+  </main>
+
+  <script src="supabaseClient.js"></script>
+  <script type="module" src="script-admin.js"></script>
+</body>
+</html>

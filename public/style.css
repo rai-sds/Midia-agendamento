@@ -264,7 +264,6 @@ table tr:nth-child(even) {
   }
 }
 
-
 @media (max-width: 480px) {
   h1 { font-size: 1.5rem; }
   h2 { font-size: 1.2rem; }
@@ -276,48 +275,42 @@ table tr:nth-child(even) {
   color: #555;
   margin-top: 4px;
 }
+
+/* ====== Seus refinamentos mobile extras do calendário ====== */
 @media (max-width: 768px) {
   .fc-event {
-    background-color: #fffbfb !important; /* azul bem escuro */
-    color: #535353 !important;           /* texto branco */
+    background-color: #fffbfb !important;
+    color: #535353 !important;
     border-radius: 6px;
     padding: 3px 5px;
     font-size: 0.8rem;
   }
-
-  /* Cabeçalho da lista */
   .fc-list-day {
-    background-color: #002855 !important; /* azul institucional */
+    background-color: #002855 !important;
     color: #ffffff !important;
     font-weight: bold;
   }
-
-  /* Bordas do calendário */
   #calendar {
     background: #ffffff;
     border: 2px solid #002855;
   }
 }
 @media (max-width: 768px) {
-  /* Cabeçalho das datas (linhas dos dias) */
   .fc-list-day {
-    background-color: #002855 !important; /* mesma cor do botão Agendar */
+    background-color: #002855 !important;
     color: #ffffff !important;
     font-weight: bold;
     text-transform: capitalize;
   }
-
-  /* Texto menor dentro das datas */
   .fc-list-day-text {
     color: #ffffff !important;
   }
-
-  /* Separador da linha */
   .fc-list-day-cushion {
     background-color: #002855 !important;
   }
 }
 
+/* Blocos laterais */
 .blocos-laterais {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -352,4 +345,69 @@ table tr:nth-child(even) {
   text-align: center;
   display: block;
   width: 100%;
+}
+
+/* ========= Estilos específicos do Admin ========= */
+
+/* Header admin destacado (para admin.html) */
+header.topo {
+  background: #002855;
+  color: #fff;
+  padding: 20px;
+  border-radius: 0 0 12px 12px;
+  text-align: center;
+}
+header.topo h1 {
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+/* Botões de ação no admin */
+.editar-btn {
+  background: #fdb913;
+  color: #002855;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  margin-right: 6px;
+}
+.editar-btn:hover {
+  background: #002855;
+  color: #fff;
+}
+
+.remover-btn {
+  background: #d9534f;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.remover-btn:hover {
+  background: #c9302c;
+}
+
+/* Formulário admin em modo edição */
+form[data-edit-id] {
+  border: 2px solid #fdb913;
+  background: #fffbea;
+  padding: 20px;
+  border-radius: 8px;
+}
+form[data-edit-id] button {
+  background: #fdb913;
+  color: #002855;
+}
+
+/* Linhas fora do padrão (admin) */
+tr.fora-padrao {
+  background-color: #fff3cd !important; /* amarelo suave */
+}
+tr.fora-padrao td {
+  font-weight: bold;
+  color: #856404;
 }
