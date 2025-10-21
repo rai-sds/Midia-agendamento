@@ -23,7 +23,7 @@
 <body>
   <div class="container">
     <header class="topo">
-      <img src="header.jpg" alt="Logo da midia" class="midia-logo" />
+      <img src="header.jpg" alt="Logo da mídia" class="midia-logo" />
     </header>
 
     <br><br><br><br>
@@ -98,35 +98,13 @@
         </div>
       </section>
 
-      <!-- Área de Login do Administrador -->
+      <!-- Login do Administrador -->
       <section id="admin-login" class="admin-section">
         <h2>Login do Administrador</h2>
         <form id="form-admin-login">
           <input type="password" id="admin-senha" placeholder="Senha de administrador" required />
           <button type="submit">Entrar</button>
         </form>
-      </section>
-
-      <!-- Painel do Administrador -->
-      <section id="painel-admin" class="admin-section" style="display:none;">
-        <h2>Gerenciar Agendamentos</h2>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Agendante</th>
-                <th>Turma</th>
-                <th>Local</th>
-                <th>Evento</th>
-                <th>Data</th>
-                <th>Início</th>
-                <th>Fim</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="admin-agendamentos"></tbody>
-          </table>
-        </div>
       </section>
     </div>
   </div>
@@ -140,7 +118,20 @@
     <div class="modal-box" id="modal-content"></div>
   </div>
 
-  <!-- Script extra para tradução -->
+  <!-- Script de login admin -->
+  <script>
+    document.getElementById("form-admin-login").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const senha = document.getElementById("admin-senha").value;
+      if (senha === "Midia123") {
+        window.location.href = "admin.html";
+      } else {
+        alert("Senha incorreta!");
+      }
+    });
+  </script>
+
+  <!-- Script extra para tradução do calendário -->
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       const calendarEl = document.getElementById("calendar");
