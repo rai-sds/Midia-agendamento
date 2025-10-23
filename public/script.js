@@ -4,6 +4,7 @@ const supabase = window.supabase;
 let calendar;
 let isAdmin = false; // controle local opcional
 
+// formata ISO date (YYYY-MM-DD) para dd/mm/yyyy
 function formatarData(iso) {
   if (!iso) return "";
   const [ano, mes, dia] = iso.split("-");
@@ -35,6 +36,7 @@ function ensureFullCalendarCss() {
   }
 }
 
+// converte data + time local strings para ISO local sem timezone changes
 function toLocalISO(dateYMD, timeHHMM) {
   const [y, m, d] = dateYMD.split("-").map(Number);
   const [hh, mm] = timeHHMM.split(":").map(Number);
@@ -43,20 +45,25 @@ function toLocalISO(dateYMD, timeHHMM) {
   return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
 }
 
+// aplica limites de hora conforme dia (horários atualizados)
 function aplicarLimitesHora(diaSemana) {
   const inicioEl = document.getElementById("inicio");
   const fimEl = document.getElementById("fim");
 
+  // Horários atualizados conforme cartaz
   let minInicio = "07:45";
   let maxFim = "11:55";
 
   if (diaSemana >= 1 && diaSemana <= 4) {
+    // Seg a Qui: manhã e tarde até 17:20
     minInicio = "07:45";
     maxFim = "17:20";
   } else if (diaSemana === 5) {
+    // Sexta: manhã e tarde até 15:45
     minInicio = "07:45";
     maxFim = "15:45";
-  } else if (diaSemana === 0 || diaSemana === 6) {
+  } else {
+    // Fim de semana: mantido 07:00 - 22:00, mas só aceito por admin
     minInicio = "07:00";
     maxFim = "22:00";
   }
@@ -93,6 +100,7 @@ async function carregarAgendamentos() {
     return fimAg >= agora;
   });
 
+  // Preenche a tabela pública
   const tbody = document.getElementById("lista-agendamentos");
   if (tbody) {
     tbody.innerHTML = "";
@@ -111,7 +119,67 @@ async function carregarAgendamentos() {
     });
   }
 
-  // Preenche calendário e modal via mesma lógica já existente
+  // Preenche a tabela do admin se presente (alguns projetos exibem a mesma tabela)
+  const adminTbody = document.getElementById("admin-agendamentos");
+  if (adminTbody) {
+    adminTbody.innerHTML = "";
+    agendamentos.forEach(a => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${a.professora}</td>
+        <td>${a.turma}</td>
+        <td>${a.local ?? ""}</td>
+        <td>${a.evento ?? ""}</td>
+        <td>${formatarData(a.data)}</td>
+        <td>${a.inicio?.slice(0,5) ?? ""}</td>
+        <td>${a.fim?.slice(0,5) ?? ""}</td>
+        <td>
+          <button class="editar-btn" data-id="${a.id}">Editar</button>
+          <button class="remover-btn" data-id="${a.id}">Remover</button>
+        </td>
+      `;
+      adminTbody.appendChild(tr);
+    });
+
+    // listeners de ação admin (delegation não usado para compatibilidade)
+    adminTbody.querySelectorAll(".remover-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        if (confirm("Deseja realmente remover este agendamento?")) {
+          const id = btn.getAttribute("data-id");
+          const { error } = await supabase.from("agendamentos").delete().eq("id", id);
+          if (error) alert("Erro ao remover: " + error.message);
+          else carregarAgendamentos();
+        }
+      });
+    });
+
+    adminTbody.querySelectorAll(".editar-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const id = btn.getAttribute("data-id");
+        const { data } = await supabase.from("agendamentos").select("*").eq("id", id).single();
+        if (data) {
+          // Preenche campos públicos/admin (mesmos ids em admin.html)
+          const formSection = document.getElementById("admin-form-section");
+          if (formSection) formSection.style.display = "block";
+          document.getElementById("admin-form-title")?.textContent && (document.getElementById("admin-form-title").textContent = "Editar Agendamento");
+          document.getElementById("professora").value = data.professora;
+          document.getElementById("turma").value = data.turma;
+          document.getElementById("local").value = data.local;
+          document.getElementById("evento").value = data.evento;
+          document.getElementById("data").value = data.data;
+          document.getElementById("inicio").value = data.inicio.slice(0,5);
+          document.getElementById("fim").value = data.fim.slice(0,5);
+          // se form-admin-agendamento existe, marca edição
+          const adminForm = document.getElementById("form-admin-agendamento");
+          if (adminForm) adminForm.setAttribute("data-edit-id", id);
+          // para editar no index (se estiver usando esse fluxo), removemos o registro antigo para evitar duplicata
+          // nota: o comportamento exato de edição pode variar conforme sua escolha; aqui mantemos fetch + set no form para update posterior
+        }
+      });
+    });
+  }
+
+  // --- Preenche o calendário ---
   const eventos = agendamentos.map(a => {
     const inicio = a.inicio?.slice(0,5) ?? "07:00";
     const fim = a.fim?.slice(0,5) ?? "08:00";
@@ -127,6 +195,7 @@ async function carregarAgendamentos() {
 
   if (!calendar) {
     const calendarEl = document.getElementById("calendar");
+    if (!calendarEl) return;
     calendar = new FullCalendar.Calendar(calendarEl, {
       initialView: isMobile() ? "listMonth" : "dayGridMonth",
       locale: "pt-br",
@@ -177,13 +246,15 @@ function abrirModal(props) {
   };
 }
 
-document.getElementById("data").addEventListener("change", function () {
+// listeners de limites de hora
+document.getElementById("data")?.addEventListener("change", function () {
+  if (!this.value) return;
   const data = new Date(this.value);
   const diaSemana = data.getDay();
   aplicarLimitesHora(diaSemana);
 });
 
-document.getElementById("inicio").addEventListener("change", function () {
+document.getElementById("inicio")?.addEventListener("change", function () {
   const fimEl = document.getElementById("fim");
   if (this.value) {
     fimEl.min = this.value;
@@ -193,7 +264,8 @@ document.getElementById("inicio").addEventListener("change", function () {
   }
 });
 
-document.getElementById("form-agendamento").addEventListener("submit", async (e) => {
+// SUBMIT do formulário de agendamento (público)
+document.getElementById("form-agendamento")?.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const professora = document.getElementById("professora").value.trim();
@@ -222,14 +294,14 @@ document.getElementById("form-agendamento").addEventListener("submit", async (e)
     return;
   }
 
-  // valida se horário está dentro dos intervalos permitidos
+  // valida se horário está dentro dos intervalos permitidos (HORÁRIOS ATUALIZADOS)
   let turnoValido = false;
 
   const manhaInicio = 7 * 60 + 45;
-  const manhaFim = 11 * 60 + 15;
+  const manhaFim = 11 * 60 + 55;     // atualizado
   const tardeInicio = 13 * 60 + 15;
-  const tardeFimSegQui = 16 * 60 + 45;
-  const tardeFimSex = 15 * 60 + 15;
+  const tardeFimSegQui = 17 * 60 + 20; // atualizado
+  const tardeFimSex = 15 * 60 + 45;    // atualizado
   const fimDeSemanaInicio = 7 * 60;
   const fimDeSemanaFim = 22 * 60;
 
@@ -245,16 +317,18 @@ document.getElementById("form-agendamento").addEventListener("submit", async (e)
       }
     }
   } else if (diaSemana === 0 || diaSemana === 6) {
-    if (inicioTotal >= fimDeSemanaInicio && fimTotal <= fimDeSemanaFim) {
+    // fim de semana só permitido para admin
+    if (isAdmin && inicioTotal >= fimDeSemanaInicio && fimTotal <= fimDeSemanaFim) {
       turnoValido = true;
     }
   }
 
   if (!turnoValido && !isAdmin) {
-    alert("Horário fora dos intervalos permitidos:\n\n• Manhã: 07:45 – 11:15\n• Tarde (Seg–Qui): 13:15 – 16:45\n• Tarde (Sex): 13:15 – 15:15\n• Fim de semana: 07:00 – 22:00\n\nSomente administradores podem criar agendamentos fora do padrão.");
+    alert("Horário fora dos intervalos permitidos:\n\n• Manhã (Seg–Sex): 07:45 – 11:55\n• Tarde (Seg–Qui): 13:15 – 17:20\n• Tarde (Sex): 13:15 – 15:45\n• Fim de semana: 07:00 – 22:00 (somente administradores)\n\nSomente administradores podem criar agendamentos fora do padrão.");
     return;
   }
 
+  // verifica conflitos
   const { data: existentes } = await supabase
     .from("agendamentos")
     .select("*")
@@ -273,6 +347,7 @@ document.getElementById("form-agendamento").addEventListener("submit", async (e)
     }
   }
 
+  // Inserção no Supabase
   const { error } = await supabase
     .from("agendamentos")
     .insert([{ professora, turma, local, evento, data, inicio: inicio + ":00", fim: fim + ":00" }]);
@@ -286,5 +361,47 @@ document.getElementById("form-agendamento").addEventListener("submit", async (e)
   await carregarAgendamentos();
 });
 
-// Inicializa
+// Inicializa o calendário e carrega agendamentos
 carregarAgendamentos();
+
+// ================= Sidebar (se existir elementos no index) =================
+
+// abrir / fechar sidebar (caso o index tenha os elementos)
+const btnSidebar = document.getElementById("btn-sidebar");
+const sidebar = document.getElementById("sidebar");
+const sidebarOverlay = document.getElementById("sidebar-overlay");
+const closeSidebarBtn = document.getElementById("close-sidebar");
+
+function abrirSidebar() {
+  if (!sidebar || !sidebarOverlay) return;
+  sidebar.classList.add("open");
+  sidebarOverlay.classList.add("open");
+  sidebar.setAttribute("aria-hidden", "false");
+  sidebarOverlay.setAttribute("aria-hidden", "false");
+}
+function fecharSidebar() {
+  if (!sidebar || !sidebarOverlay) return;
+  sidebar.classList.remove("open");
+  sidebarOverlay.classList.remove("open");
+  sidebar.setAttribute("aria-hidden", "true");
+  sidebarOverlay.setAttribute("aria-hidden", "true");
+}
+
+btnSidebar?.addEventListener("click", abrirSidebar);
+closeSidebarBtn?.addEventListener("click", fecharSidebar);
+sidebarOverlay?.addEventListener("click", fecharSidebar);
+
+// Login via sidebar (redireciona para admin.html quando correto)
+// Observação: senha fixa em frontend é apenas exemplo; em produção use autenticação no backend/Supabase Auth
+document.getElementById("form-admin-login-sidebar")?.addEventListener("submit", function(e) {
+  e.preventDefault();
+  const senha = document.getElementById("admin-senha-sidebar").value;
+  if (senha === "Midia123") {
+    // marca admin local (se quiser permitir ações imediatas sem redirecionar)
+    isAdmin = true;
+    // redireciona ao painel admin
+    window.location.href = "admin.html";
+  } else {
+    alert("Senha incorreta.");
+  }
+});
