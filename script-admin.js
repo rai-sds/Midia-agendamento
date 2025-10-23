@@ -1,8 +1,13 @@
 // Usa o cliente global do Supabase
 const supabase = window.supabase;
 
+// debug inicial
+console.log("script-admin.js carregado");
+if (!window.supabase) console.error("ERRO: window.supabase não encontrado. Verifique supabaseClient.js");
+
 // checa se horário fora do padrão
 function isHorarioForaDoPadrao(data, inicio, fim) {
+  if (!data || !inicio || !fim) return true;
   const dt = new Date(data + "T00:00");
   const diaSemana = dt.getDay();
 
@@ -33,142 +38,211 @@ function isHorarioForaDoPadrao(data, inicio, fim) {
   return !valido;
 }
 
+function formatarData(iso) {
+  if (!iso) return "";
+  const [ano, mes, dia] = iso.split("-");
+  return `${dia}/${mes}/${ano}`;
+}
+
 async function carregarAgendamentos() {
-  const { data: agendamentos, error } = await supabase
-    .from("agendamentos")
-    .select("*")
-    .order("data", { ascending: true })
-    .order("inicio", { ascending: true });
-
-  if (error) {
-    console.error("Erro ao carregar:", error.message);
-    return;
-  }
-
-  const tbody = document.getElementById("admin-agendamentos");
-  tbody.innerHTML = "";
-
-  agendamentos.forEach(a => {
-    const tr = document.createElement("tr");
-    if (isHorarioForaDoPadrao(a.data, a.inicio.slice(0,5), a.fim.slice(0,5))) {
-      tr.classList.add("fora-padrao");
+  try {
+    if (!window.supabase) {
+      console.error("Cannot load agendamentos: supabase not initialized");
+      return;
     }
-    tr.innerHTML = `
-      <td>${a.professora}</td>
-      <td>${a.turma}</td>
-      <td>${a.local ?? ""}</td>
-      <td>${a.evento ?? ""}</td>
-      <td>${a.data}</td>
-      <td>${a.inicio?.slice(0,5) ?? ""}</td>
-      <td>${a.fim?.slice(0,5) ?? ""}</td>
-      <td>
-        <button class="editar-btn" data-id="${a.id}">Editar</button>
-        <button class="remover-btn" data-id="${a.id}">Remover</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
 
-  // Remover
-  document.querySelectorAll(".remover-btn").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const id = btn.getAttribute("data-id");
-      if (confirm("Deseja remover este agendamento?")) {
-        const { error } = await supabase.from("agendamentos").delete().eq("id", id);
-        if (error) alert("Erro ao remover: " + error.message);
-        else carregarAgendamentos();
-      }
-    });
-  });
+    const { data: agendamentos, error } = await supabase
+      .from("agendamentos")
+      .select("*")
+      .order("data", { ascending: true })
+      .order("inicio", { ascending: true });
 
-  // Editar
-  document.querySelectorAll(".editar-btn").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const id = btn.getAttribute("data-id");
-      const { data, error } = await supabase.from("agendamentos").select("*").eq("id", id).single();
-      if (error) {
-        alert("Erro ao buscar: " + error.message);
-        return;
-      }
-      const formSection = document.getElementById("admin-form-section");
-      formSection.style.display = "block";
-      document.getElementById("admin-form-title").textContent = "Editar Agendamento";
-      document.getElementById("professora").value = data.professora;
-      document.getElementById("turma").value = data.turma;
-      document.getElementById("local").value = data.local;
-      document.getElementById("evento").value = data.evento;
-      document.getElementById("data").value = data.data;
-      document.getElementById("inicio").value = data.inicio.slice(0,5);
-      document.getElementById("fim").value = data.fim.slice(0,5);
-      document.getElementById("form-admin-agendamento").setAttribute("data-edit-id", id);
-      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+    if (error) {
+      console.error("Erro ao carregar agendamentos:", error.message);
+      return;
+    }
+
+    // segurança: garanta array
+    const lista = Array.isArray(agendamentos) ? agendamentos : [];
+
+    // Preenche a tabela admin
+    const tbody = document.getElementById("admin-agendamentos");
+    if (!tbody) {
+      console.error("Elemento #admin-agendamentos não encontrado no DOM");
+    } else {
+      tbody.innerHTML = "";
+      lista.forEach(a => {
+        const dataFmt = a.data ? formatarData(a.data) : "";
+        const inicio = a.inicio ? a.inicio.slice(0,5) : "";
+        const fim = a.fim ? a.fim.slice(0,5) : "";
+
+        const tr = document.createElement("tr");
+        if (isHorarioForaDoPadrao(a.data, inicio, fim)) {
+          tr.classList.add("fora-padrao");
+        }
+        tr.innerHTML = `
+          <td>${a.professora ?? ""}</td>
+          <td>${a.turma ?? ""}</td>
+          <td>${a.local ?? ""}</td>
+          <td>${a.evento ?? ""}</td>
+          <td>${dataFmt}</td>
+          <td>${inicio}</td>
+          <td>${fim}</td>
+          <td>
+            <button class="editar-btn" data-id="${a.id}">Editar</button>
+            <button class="remover-btn" data-id="${a.id}">Remover</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // attach listeners (use delegation safe fallback)
+    // remover
+    document.querySelectorAll(".remover-btn").forEach(btn => {
+      btn.removeEventListener("click", btn._rmListener);
+      const rmListener = async () => {
+        const id = btn.getAttribute("data-id");
+        if (!id) return;
+        if (confirm("Deseja remover este agendamento?")) {
+          const { error } = await supabase.from("agendamentos").delete().eq("id", id);
+          if (error) alert("Erro ao remover: " + error.message);
+          else carregarAgendamentos();
+        }
+      };
+      btn.addEventListener("click", rmListener);
+      btn._rmListener = rmListener;
     });
-  });
+
+    // editar
+    document.querySelectorAll(".editar-btn").forEach(btn => {
+      btn.removeEventListener("click", btn._editListener);
+      const editListener = async () => {
+        const id = btn.getAttribute("data-id");
+        if (!id) return;
+        const { data, error } = await supabase.from("agendamentos").select("*").eq("id", id).single();
+        if (error) {
+          alert("Erro ao buscar: " + error.message);
+          return;
+        }
+        const formSection = document.getElementById("admin-form-section");
+        if (formSection) formSection.style.display = "block";
+        const titleEl = document.getElementById("admin-form-title");
+        if (titleEl) titleEl.textContent = "Editar Agendamento";
+        // preenche campos com checagem
+        const setIf = (idEl, val) => {
+          const el = document.getElementById(idEl);
+          if (el && val != null) el.value = val;
+        };
+        setIf("professora", data.professora);
+        setIf("turma", data.turma);
+        setIf("local", data.local);
+        setIf("evento", data.evento);
+        setIf("data", data.data);
+        setIf("inicio", data.inicio ? data.inicio.slice(0,5) : "");
+        setIf("fim", data.fim ? data.fim.slice(0,5) : "");
+        const adminForm = document.getElementById("form-admin-agendamento");
+        if (adminForm) adminForm.setAttribute("data-edit-id", id);
+        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+      };
+      btn.addEventListener("click", editListener);
+      btn._editListener = editListener;
+    });
+
+  } catch (err) {
+    console.error("Erro inesperado em carregarAgendamentos:", err);
+  }
 }
 
 // Salvar (novo ou edição)
-document.getElementById("form-admin-agendamento").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const professora = document.getElementById("professora").value.trim();
-  const turma = document.getElementById("turma").value.trim();
-  const local = document.getElementById("local").value.trim();
-  const evento = document.getElementById("evento").value.trim();
-  const data = document.getElementById("data").value;
-  const inicio = document.getElementById("inicio").value;
-  const fim = document.getElementById("fim").value;
+const adminForm = document.getElementById("form-admin-agendamento");
+if (adminForm) {
+  adminForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const professora = document.getElementById("professora").value.trim();
+    const turma = document.getElementById("turma").value.trim();
+    const local = document.getElementById("local").value.trim();
+    const evento = document.getElementById("evento").value.trim();
+    const data = document.getElementById("data").value;
+    const inicio = document.getElementById("inicio").value;
+    const fim = document.getElementById("fim").value;
 
-  const idEdicao = e.target.getAttribute("data-edit-id");
+    const idEdicao = e.target.getAttribute("data-edit-id");
 
-  if (!professora || !turma || !local || !evento || !data || !inicio || !fim) {
-    alert("Preencha todos os campos.");
-    return;
-  }
-
-  if (idEdicao) {
-    const { error } = await supabase
-      .from("agendamentos")
-      .update({ professora, turma, local, evento, data, inicio: inicio + ":00", fim: fim + ":00" })
-      .eq("id", idEdicao);
-
-    if (error) alert("Erro ao atualizar: " + error.message);
-    else {
-      alert("Agendamento atualizado!");
-      e.target.removeAttribute("data-edit-id");
-      e.target.reset();
-      document.getElementById("admin-form-section").style.display = "none";
-      carregarAgendamentos();
+    if (!professora || !turma || !local || !evento || !data || !inicio || !fim) {
+      alert("Preencha todos os campos.");
+      return;
     }
-  } else {
-    const { error } = await supabase
-      .from("agendamentos")
-      .insert([{ professora, turma, local, evento, data, inicio: inicio + ":00", fim: fim + ":00" }]);
 
-    if (error) alert("Erro ao inserir: " + error.message);
-    else {
-      alert("Agendamento criado!");
-      e.target.reset();
-      document.getElementById("admin-form-section").style.display = "none";
-      carregarAgendamentos();
+    try {
+      if (idEdicao) {
+        const { error } = await supabase
+          .from("agendamentos")
+          .update({ professora, turma, local, evento, data, inicio: inicio + ":00", fim: fim + ":00" })
+          .eq("id", idEdicao);
+
+        if (error) alert("Erro ao atualizar: " + error.message);
+        else {
+          alert("Agendamento atualizado!");
+          e.target.removeAttribute("data-edit-id");
+          e.target.reset();
+          const formSection = document.getElementById("admin-form-section");
+          if (formSection) formSection.style.display = "none";
+          carregarAgendamentos();
+        }
+      } else {
+        const { error } = await supabase
+          .from("agendamentos")
+          .insert([{ professora, turma, local, evento, data, inicio: inicio + ":00", fim: fim + ":00" }]);
+
+        if (error) alert("Erro ao inserir: " + error.message);
+        else {
+          alert("Agendamento criado!");
+          e.target.reset();
+          const formSection = document.getElementById("admin-form-section");
+          if (formSection) formSection.style.display = "none";
+          carregarAgendamentos();
+        }
+      }
+    } catch (err) {
+      console.error("Erro inesperado ao salvar agendamento:", err);
+      alert("Erro inesperado. Veja o console.");
     }
-  }
-});
+  });
+} else {
+  console.warn("#form-admin-agendamento não encontrado; formulário de criação estará indisponível.");
+}
 
 // Botão Adicionar e Cancelar
-document.getElementById("btn-adicionar").addEventListener("click", () => {
-  const formSection = document.getElementById("admin-form-section");
-  formSection.style.display = "block";
-  document.getElementById("admin-form-title").textContent = "Novo Agendamento";
-  document.getElementById("form-admin-agendamento").reset();
-  document.getElementById("form-admin-agendamento").removeAttribute("data-edit-id");
-  window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-});
+const btnAdd = document.getElementById("btn-adicionar");
+if (btnAdd) {
+  btnAdd.addEventListener("click", () => {
+    const formSection = document.getElementById("admin-form-section");
+    if (formSection) formSection.style.display = "block";
+    const title = document.getElementById("admin-form-title");
+    if (title) title.textContent = "Novo Agendamento";
+    const f = document.getElementById("form-admin-agendamento");
+    if (f) {
+      f.reset();
+      f.removeAttribute("data-edit-id");
+    }
+    window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+  });
+} else {
+  console.warn("#btn-adicionar não encontrado no DOM");
+}
 
-document.getElementById("btn-cancelar").addEventListener("click", () => {
-  const formSection = document.getElementById("admin-form-section");
-  formSection.style.display = "none";
-  document.getElementById("form-admin-agendamento").removeAttribute("data-edit-id");
-  document.getElementById("form-admin-agendamento").reset();
-});
+const btnCancelar = document.getElementById("btn-cancelar");
+if (btnCancelar) {
+  btnCancelar.addEventListener("click", () => {
+    const formSection = document.getElementById("admin-form-section");
+    if (formSection) formSection.style.display = "none";
+    const f = document.getElementById("form-admin-agendamento");
+    if (f) {
+      f.removeAttribute("data-edit-id");
+      f.reset();
+    }
+  });
+}
 
-// Inicializa
 carregarAgendamentos();

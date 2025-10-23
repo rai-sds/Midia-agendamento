@@ -573,8 +573,10 @@ tr.fora-padrao td {
   border-radius: 8px;
   text-decoration: none;
   font-weight: 700;
+  box-shadow: none;
 }
-.btn-whatsapp svg { margin-left: 2px; }
+.btn-whatsapp svg { flex-shrink: 0; display: block; }
+
 
 /* acessibilidade: esconder rótulos visuais */
 .sr-only {
@@ -588,4 +590,65 @@ tr.fora-padrao td {
 @media (max-width: 480px) {
   .sidebar { width: 280px; }
   .btn-icone { right: 12px; bottom: 12px; }
+}
+/* Header admin colado ao topo e sem sombra */
+header.topo.admin-top {
+  margin: 0;
+  padding: 12px 18px;
+  border-radius: 0;
+  background: linear-gradient(90deg,#f7f9fb,#ffffff);
+  box-shadow: none;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+/* Ajuste do container admin para não criar espaço superior grande */
+main.container.admin-container {
+  margin-top: 0;
+  padding-top: 18px;
+}
+
+/* zera margens do título se ainda houver espaço */
+.admin-top h1 { margin: 0; padding: 0; }
+/* Espaçamento entre header e conteúdo principal no admin */
+main.container.admin-container {
+  margin-top: 8px;        /* reduz possível colagem ao header */
+  padding-top: 22px;      /* cria espaço interno superior */
+}
+
+/* Envolve a tabela e dá espaçamento externo */
+.table-wrap {
+  margin-top: 18px;
+  padding: 14px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.04);
+}
+
+/* Mais espaço nas células e linhas mais altas para legibilidade */
+table th, table td {
+  padding: 14px 12px;     /* aumenta o padding horizontal/vertical */
+  height: 56px;           /* garante linhas mais altas */
+  vertical-align: middle;
+}
+
+/* Cabeçalho da tabela com mais respiração visual */
+table thead th {
+  letter-spacing: 0.6px;
+  font-size: 0.95rem;
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+/* Espaço entre a legenda/título e a tabela */
+section > h2 {
+  margin-bottom: 12px;
+}
+
+/* Em telas pequenas, mantém legibilidade e separação */
+@media (max-width: 768px) {
+  .table-wrap { padding: 10px; }
+  table th, table td { padding: 10px 8px; height: auto; }
+  section > h2 { margin-bottom: 8px; }
 }
