@@ -5,7 +5,7 @@ const supabase = window.supabase;
 console.log("script-admin.js carregado");
 if (!window.supabase) console.error("ERRO: window.supabase não encontrado. Verifique supabaseClient.js");
 
-// checa se horário fora do padrão
+// checa se horário fora do padrão (horários atualizados conforme cartaz)
 function isHorarioForaDoPadrao(data, inicio, fim) {
   if (!data || !inicio || !fim) return true;
   const dt = new Date(data + "T00:00");
@@ -17,10 +17,10 @@ function isHorarioForaDoPadrao(data, inicio, fim) {
   const fimTotal = hf * 60 + mf;
 
   const manhaInicio = 7 * 60 + 45;
-  const manhaFim = 11 * 60 + 15;
+  const manhaFim = 11 * 60 + 55;      // atualizado
   const tardeInicio = 13 * 60 + 15;
-  const tardeFimSegQui = 16 * 60 + 45;
-  const tardeFimSex = 15 * 60 + 15;
+  const tardeFimSegQui = 17 * 60 + 20; // atualizado
+  const tardeFimSex = 15 * 60 + 45;    // atualizado
   const fimDeSemanaInicio = 7 * 60;
   const fimDeSemanaFim = 22 * 60;
 
@@ -62,21 +62,31 @@ async function carregarAgendamentos() {
       return;
     }
 
-    // segurança: garanta array
     const lista = Array.isArray(agendamentos) ? agendamentos : [];
 
-    // Preenche a tabela admin
+    // filtra apenas agendamentos que ainda não acabaram (fim >= agora)
+    const agora = new Date();
+    const ativos = lista.filter(a => {
+      if (!a || !a.data || !a.fim) return false;
+      // a.fim pode estar no formato "HH:MM:SS" ou "HH:MM"
+      const fimStr = a.fim.slice(0,5);
+      const fimDt = new Date(`${a.data}T${fimStr}`);
+      return fimDt >= agora;
+    });
+
+    // Preenche a tabela admin com apenas agendamentos ativos
     const tbody = document.getElementById("admin-agendamentos");
     if (!tbody) {
       console.error("Elemento #admin-agendamentos não encontrado no DOM");
     } else {
       tbody.innerHTML = "";
-      lista.forEach(a => {
+      ativos.forEach(a => {
         const dataFmt = a.data ? formatarData(a.data) : "";
         const inicio = a.inicio ? a.inicio.slice(0,5) : "";
         const fim = a.fim ? a.fim.slice(0,5) : "";
 
         const tr = document.createElement("tr");
+        // aplica classe apenas se estiver fora do padrão
         if (isHorarioForaDoPadrao(a.data, inicio, fim)) {
           tr.classList.add("fora-padrao");
         }
@@ -97,10 +107,9 @@ async function carregarAgendamentos() {
       });
     }
 
-    // attach listeners (use delegation safe fallback)
-    // remover
+    // attach listeners (remove listeners antigos antes)
     document.querySelectorAll(".remover-btn").forEach(btn => {
-      btn.removeEventListener("click", btn._rmListener);
+      if (btn._rmListener) btn.removeEventListener("click", btn._rmListener);
       const rmListener = async () => {
         const id = btn.getAttribute("data-id");
         if (!id) return;
@@ -114,9 +123,8 @@ async function carregarAgendamentos() {
       btn._rmListener = rmListener;
     });
 
-    // editar
     document.querySelectorAll(".editar-btn").forEach(btn => {
-      btn.removeEventListener("click", btn._editListener);
+      if (btn._editListener) btn.removeEventListener("click", btn._editListener);
       const editListener = async () => {
         const id = btn.getAttribute("data-id");
         if (!id) return;
@@ -129,7 +137,6 @@ async function carregarAgendamentos() {
         if (formSection) formSection.style.display = "block";
         const titleEl = document.getElementById("admin-form-title");
         if (titleEl) titleEl.textContent = "Editar Agendamento";
-        // preenche campos com checagem
         const setIf = (idEl, val) => {
           const el = document.getElementById(idEl);
           if (el && val != null) el.value = val;
